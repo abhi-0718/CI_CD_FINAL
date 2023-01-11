@@ -61,13 +61,24 @@ pipeline {
             }
         }
 	  
-// 	 stage('5.Email-DEV'){
-//             steps{
-//                 script{
-//                     emailext body: 'Deploying Project', subject: 'DEPLOYMENT', to: 'abhishek09dubey85@gmail.com'
-//                 }
-//             }
-//         }
+	 stage('5.Email-DEV'){
+            steps{
+                script{
+                    emailext body: 'Deploying Project to production', subject: 'DEPLOYMENT', to: 'abhishek09dubey85@gmail.com'
+                }
+            }
+        }
+	    
+	 
+	    stage('6.Production'){
+		    steps{
+			    script{
+				    echo '------------------------------PRDDUCTION------------------------------'
+				    bat ' docker pull habhi/ci_cd_dev'
+				    bat 'docker run -p 8000:8000 habhi/ci_cd_dev'
+			    }
+		    }
+	    }
 
        
 	}
