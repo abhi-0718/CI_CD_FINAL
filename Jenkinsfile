@@ -1,16 +1,3 @@
-def user
-node {
-    wrap([$class: 'BuildUser']) {
-        user = env.BUILD_USER_ID
-    }
-  
-    emailext mimeType: 'text/html',
-                    subject: "[Jenkins]${currentBuild.fullDisplayName}",
-                    to: "abhishek09dubey85@gmail.com",
-                    body: '''<a href="${BUILD_URL}input">click to approve</a>'''
-}
-
-
 pipeline {
     environment{
         dockerImage = ''
@@ -25,7 +12,7 @@ pipeline {
     }
 
     stages {
-        stage('1.Code Build and Analysis of Code') {
+        stage('Code Build and Analysis of Code') {
             steps {
 				echo '-----------------Building code-----------------------'
                 withSonarQubeEnv('sonarserver'){
@@ -54,18 +41,17 @@ pipeline {
         }
 
 
-        stage('3.Building image') {
+        stage('Building image') {
             steps{
                 script {
                     echo '---------------------------Building Image----------------------------------'
                     bat 'docker build . -t habhi/ci_cd_qa'
                     echo '---------------------------Image Successfully Build---------------------------------'
-		            bat 'docker images'
                 }
             }
         }
 
-        stage('4.Deploy image to DockerHub') {
+        stage('Deploy image to DockerHub') {
             steps{
                 script{
                     echo '-----------------------------Deploying Image----------------------------------------'
