@@ -61,13 +61,13 @@ pipeline {
             }
         }
 	  
-	 stage('5.Email-DEV'){
-            steps{
-                script{
-                    emailext body: 'Deploying Project to production', subject: 'DEPLOYMENT', to: 'abhishek09dubey85@gmail.com'
-                }
-            }
-        }
+// 	 stage('5.Email-DEV'){
+//             steps{
+//                 script{
+//                     emailext body: 'Deploying Project to production', subject: 'DEPLOYMENT', to: 'abhishek09dubey85@gmail.com'
+//                 }
+//             }
+//         }
 	    
 	 
 	    stage('6.Production'){
