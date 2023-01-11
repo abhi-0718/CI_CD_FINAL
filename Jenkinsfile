@@ -1,3 +1,16 @@
+def user
+node {
+    wrap([$class: 'BuildUser']) {
+        user = env.BUILD_USER_ID
+    }
+  
+    emailext mimeType: 'text/html',
+                    subject: "[Jenkins]${currentBuild.fullDisplayName}",
+                    to: "abhishek09dubey85@gmail.com",
+                    body: '''<a href="${BUILD_URL}input">click to approve</a>'''
+}
+
+
 pipeline {
     environment{
         dockerImage = ''
@@ -8,28 +21,24 @@ pipeline {
         maven "Maven"
         git "Git"
         jdk "Jdk"
-	dockerTool "Docker"
+	    dockerTool "Docker"
     }
 
     stages {
         stage('1.Code Build and Analysis of Code') {
             steps {
-                // Get some code from a GitHub repository
-                //git 'https://github.com/jglick/simple-maven-project-with-tests.git'
-                
-                // To run Maven on a Windows agent, use
 				echo '-----------------Building code-----------------------'
-                
-                // bat "mvn clean package"
                 withSonarQubeEnv('sonarserver'){
-			withMaven(maven:'Maven'){
-					bat 'mvn clean package sonar:sonar'
-                    echo '---------------Code Build and analysis of code is successfull---------------------'
-				}
-		}
-            }
+                    withMaven(maven:'Maven'){
+                        bat 'mvn clean package sonar:sonar'
+                        echo '---------------Code Build and analysis of code is successfull---------------------'
+                    }
+                }
 
+           }
     	}
+
+
 		stage('Quality Gate Check'){
 			steps{
 				timeout(time: 1, unit: 'HOURS') {
@@ -38,36 +47,62 @@ pipeline {
 			}
 		}
 
+        stage('Selenium Testing'){
+            steps{
+                echo '-----------------------------SELENIUM TESTING COMPLLETED------------------------------'
+            }
+        }
+
+
         stage('3.Building image') {
             steps{
                 script {
                     echo '---------------------------Building Image----------------------------------'
-                    bat 'docker build . -t habhi/ci_cd_dev'
+                    bat 'docker build . -t habhi/ci_cd_qa'
                     echo '---------------------------Image Successfully Build---------------------------------'
-// 		            bat 'docker images'
+		            bat 'docker images'
                 }
             }
         }
 
-         stage('4.Deploy image to DockerHub') {
+        stage('4.Deploy image to DockerHub') {
             steps{
                 script{
                     echo '-----------------------------Deploying Image----------------------------------------'
                     docker.withRegistry('', 'Docker_ID') {
-                        bat 'docker push habhi/ci_cd_dev'
+                        bat 'docker push habhi/ci_cd_qa'
                         echo '-------------------------Image Successfully pushed--------------------------------'
                     }
                 } 
             }
         }
-	  
-// 	 stage('5.Email-DEV'){
-//             steps{
-//                 script{
-//                     emailext body: 'Deploying Project', subject: 'DEPLOYMENT', to: 'abhishek09dubey85@gmail.com'
-//                 }
-//             }
-//         }
+
+        stage('Email Approval from Lead') {
+            input {
+                message "Should we continue?"
+                ok "Yes"
+            }
+            
+            steps {
+                emailext mimeType: 'text/html',
+                    subject: "[Jenkins]${currentBuild.fullDisplayName}",
+                    to: "abhishek09dubey85@gmail.com",
+                    body: '''<a href="${BUILD_URL}input">click to approve</a>'''
+                echo  "deployment"
+            }
+        }
+
+        stage('Production'){
+            steps{
+                script{
+                    echo '-------------------------Pulling Image from DOCKER HUB--------------------------'
+                    bat 'docker pull habhi/ci_cd_qa:latest'
+                    echo '-------------------------------PRODUCTION-----------------------------------'
+                    bat 'docker run -p 8000:8000 habhi/ci_cd_qa:latest'
+
+                }
+            }
+        }
 
        
 	}
